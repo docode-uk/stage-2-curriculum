@@ -1,16 +1,37 @@
 # UNIX Sockets
 
 ## Introduction
-Applications require a way to communicate with eachother: for example, a web app needs to get a list of users from a database, or a messaging app needs to send a message to a friend. This process is known as "Inter-Process Communication" (IPC), and this can be achieved in many ways.
+Applications often need to communicate with each other: for example, a web app might need to fetch a list of users from a database, or a messaging app might need to send a message to a friend. This process is known as "Inter-Process Communication" (IPC), and it can be achieved in many ways, depending on the specific needs of the applications.
 
-One could implement IPC by saving a message to a file, and having another file/user read from it. This would be slow, insecure, and have issues when more than one person tries to write to the file at the same time.
+### Inter-Process Communication vs. Network Communication
+It's important to distinguish between Inter-Process Communication (IPC) and network communication. IPC is typically used for communication between processes on the same machine, while network communication involves data transfer between different machines, usually over a network like the internet.
 
-Another way would be to use [pipes](https://man7.org/linux/man-pages/man2/pipe.2.html) or [named pipes/FIFOs](https://man7.org/linux/man-pages/man7/fifo.7.html) to communicate between processes. These are obviously faster, but are also unidirectional and the input/output can only be consumed by one process at a time.
+For example:
 
-[Shared Memory (SHM)](https://man7.org/linux/man-pages/man7/shm_overview.7.html) offers another way to communicate between processes, but it is more complex to implement and manage - and can add security risks.
+A database connection typically uses TCP/IP, a protocol that goes through the network stack, _even if the database and application are on the same machine_.
+A messaging app might use WebSocket or HTTP, both of which also involve the network stack.
+While network communication provides the flexibility to communicate across different machines, it introduces overhead, such as passing through the network stack, dealing with network latency, and binding to ports.
 
-[UNIX Sockets](https://man7.org/linux/man-pages/man7/unix.7.html) offer a convenient way to communicate _bidirectionally_ between processes, and can be setup with added security features - and are the UNIX standard for IPC.
+### Advantages of Local IPC Mechanisms
+When processes need to communicate on the same machine, using local IPC mechanisms like UNIX sockets, pipes, or shared memory can offer significant performance benefits:
 
+No Network Stack Overhead: Local IPC avoids the network stack, making communication faster.
+Security: There’s no need to bind to a network port, reducing the attack surface.
+Efficiency: Local IPC is generally more efficient as it doesn’t involve packetization and other network-level operations.
+
+### IPC Mechanisms
+- **Pipes and Named Pipes/FIFOs**: These are simple, unidirectional channels for passing data between processes. They are efficient but limited because only one process can read from or write to the pipe at a time.
+- **Shared Memory (SHM)**: This allows multiple processes to access the same memory space, making communication extremely fast. However, it requires careful management to avoid race conditions and ensure data consistency. It's useful in scenarios where large amounts of data need to be shared quickly between processes.
+- **UNIX Sockets**: These provide a bidirectional communication channel between processes. Unlike TCP/IP sockets, UNIX sockets don’t involve the network stack, making them faster for local IPC. They also allow for finer-grained security controls, as you can set file permissions on the socket.
+
+### Practical Examples
+- **Communicating with the Docker Daemon**: The Docker daemon listens on a UNIX socket. This allows tools like docker to interact with it efficiently without going through the network stack.
+- **Building Custom Daemons**: You can create custom daemons for tasks like logging or garbage collection that listen on UNIX sockets. This approach allows different processes (in different languages) to communicate with the daemon in a secure and efficient manner.
+
+### Future Plans
+> TODO: solidify example
+
+We will create a rust daemon that can handle many synchronous requests (from multiple python clients for example) that will query a remote database.
 
 ## Types of UNIX Sockets
 
