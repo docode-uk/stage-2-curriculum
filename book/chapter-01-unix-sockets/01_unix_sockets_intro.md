@@ -113,7 +113,7 @@ print(f"Received {data!r}")
 Success! We should see that both the server and client process report the message!
 
 ### How did that work?
-
+#### Context Managers
 When calling 
 
 ```python
@@ -122,7 +122,58 @@ with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 
 we are using a special python keywork `with` - this is known as a [context manager](https://docs.python.org/3/library/stdtypes.html#typecontextmanager) in python, which allows us to run code before we enter the `with` block (defined by a `__enter__` method), and run code afterwards (defined by a `__exit__` block). This is usually done to make sure we clean up code or states that are easy to forget to write! Often this is used in contexts when interfacing with files or networking where we want to close ports or release resources back to the operating system.
 
-Looking at the source files we can see this is [exactly what is happening](https://github.com/python/cpython/blob/main/Lib/socket.py#L215-L242) with the socket class.
+Let's make a quick example:
+
+```python
+class CustomContext():
+    def __enter__(self):
+        print(">>> Entering context")
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        print("<<< Leaving context")
+
+with CustomContext():
+    print("In context")
+```
+
+Try running the above and see what happens!
+
+---
+
+You might have noticed the `__exit__` method takes multiple other variables than `self` - these are used if you want to handle a certain exception that might happen during your context block.
+
+We can create a slightly more complicated example showing this:
+
+```python
+class CustomContext:
+    def __enter__(self):
+        print(">>> Entering context")
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        print("<<< Leaving context")
+        if isinstance(exc_value, FileNotFoundError):
+            print(f"Exception raised in block: {exc_type}")
+            print(f"Exception message: {exc_value}")
+            return True
+
+
+def start_launch_sequence():
+    raise FileNotFoundError("Launch codes not found.")
+
+
+with CustomContext():
+    print("To the moon 🚀🌕")
+    start_launch_sequence()
+
+print("Done.")
+
+```
+
+Looking at the source files we can [see how the python socket class](https://github.com/python/cpython/blob/main/Lib/socket.py#L215-L242) uses the context manager.
+
+> [RealPython](https://realpython.com/python-with-statement) has a nice tutorial going into further depth with context managers that is worth a look (we've used a class based implementation - but there are other means such as a function based approach!).
+
+#### Using Sockets
 
 The setting `socket.AF_UNIX` denotes that we are using Unix address family, and the `socket.SOCK_STREAM` allows us to create the object in stream mode (rather than using a datagram).
 
@@ -149,6 +200,8 @@ with conn:
             break
         conn.sendall(data)
 ```
+
+> TODO: Explain buffer
 
 ### The Client 
 
