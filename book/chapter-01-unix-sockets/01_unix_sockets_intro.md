@@ -29,7 +29,7 @@ Efficiency: Local IPC is generally more efficient as it doesn’t involve packet
 - **Building Custom Daemons**: You can create custom daemons for tasks like logging or garbage collection that listen on UNIX sockets. This approach allows different processes (in different languages) to communicate with the daemon in a secure and efficient manner.
 
 ### Future Plans
-> TODO: solidify example
+<!-- TODO: solidify example -->
 
 We will create a rust daemon that can handle many synchronous requests (from multiple python clients for example) that will query a remote database.
 
@@ -201,7 +201,7 @@ with conn:
         conn.sendall(data)
 ```
 
-> TODO: Explain buffer
+<!-- TODO: Explain buffer -->
 
 ### The Client 
 
