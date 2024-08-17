@@ -211,7 +211,8 @@ Try changing the `bufsize` to `2` and see what happens?
 
 <details>
 <spoiler>Expected Outcome</spoiler>
-```sh
+
+  ```
 Listening on /tmp/docode.sock
 Got connection with message: b'He'
 Got connection with message: b'll'
