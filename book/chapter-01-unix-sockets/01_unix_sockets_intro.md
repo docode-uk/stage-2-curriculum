@@ -112,13 +112,48 @@ print(f"Received {data!r}")
 
 Success! We should see that both the server and client process report the message!
 
+#### Cleaning Up
+
+Try running that again and an error will be raised:
+
+```
+Traceback (most recent call last):
+  File "/tmp/serv.py", line 5, in <module>
+    sock.bind("/tmp/docode.sock")
+OSError: [Errno 48] Address already in use
+```
+
+This is through no fault of our own - but as a result of how Unix expects sockets to be handled. This is because a socket can outlive the filename it is associated with. Concretely, this means that if there is a long running process which requires an ongoing connection, but does not want other clients to connect, we can hold a socket open without the ability of other clients to connect.
+
+In essence, the operating system uses the socket file as a reference of where to connect to, and once the connection is established the file is not used further by the two processes. However, more processes can use it to connect!
+
+As a result it is up to us to cleanup the socket file when we chose: we can remove it cleanly after our message has been sent by adding the following to the bottom of our server file:
+
+```python
+import os 
+# Add this import to the top of the file 
+# ...
+# Add this to the very end
+os.unlink('/tmp/docode.sock')
+```
+Before trying again, we need to remove the old socket file we already have:
+
+```sh
+rm /tmp/docode.sock
+```
+This should work fine now!
+
+> *Getting into the weeds...*
+> This is beginning to get more complex as we delve more into Unix inner workings - and it turns out there's another variant of sockets we can use called _abstract sockets_ - these are similar to the sockets we are using, but they are never 'materialised' on the file system. 
+> This has the advantage of not needing to cleanup after ourselves, but the disadvantage of not getting file based permissions (limiting who can use our socket) and is only found on linux - as such I will not go into more depth, but there is more interesting detail [here](https://man7.org/linux/man-pages/man7/unix.7.html#:~:text=not%20be%20inspected.-,abstract,-an%20abstract%20socket) and [here](https://utcc.utoronto.ca/~cks/space/blog/linux/SocketAbstractNamespace)
+
 ### How did that work?
 #### Context Managers
 When calling 
 
 ```python
 with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
-``` 
+```
 
 we are using a special python keywork `with` - this is known as a [context manager](https://docs.python.org/3/library/stdtypes.html#typecontextmanager) in python, which allows us to run code before we enter the `with` block (defined by a `__enter__` method), and run code afterwards (defined by a `__exit__` block). This is usually done to make sure we clean up code or states that are easy to forget to write! Often this is used in contexts when interfacing with files or networking where we want to close ports or release resources back to the operating system.
 
