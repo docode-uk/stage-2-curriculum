@@ -201,7 +201,30 @@ with conn:
         conn.sendall(data)
 ```
 
-<!-- TODO: Explain buffer -->
+#### Buffers
+
+We can see that our connection object takes an argument `bufsize` - we have set it in this instance to be `1024` bytes, and we loop over the `recv()` method until there is no more `data`. 
+
+Setting the `bufsize` is a trade off between efficiency and resources: if we set `bufsize` too small, we are going to need to make lots of network calls as we loop over the payload we need to send. On the other hand, if we set it too large we may end up using more memory than needed: e.g. if we send a small message but need to allocate megabytes of memory for each this is highly inefficient.
+
+Try changing the `bufsize` to `2` and see what happens?
+
+<details>
+<spoiler>Expected Outcome</spoiler>
+```sh
+Listening on /tmp/docode.sock
+Got connection with message: b'He'
+Got connection with message: b'll'
+Got connection with message: b'o,'
+Got connection with message: b' d'
+Got connection with message: b'oc'
+Got connection with message: b'od'
+Got connection with message: b'e!'
+Got connection with message: b''
+```
+
+We can see that we end up _receiving_ 8 messages before we fully receive the message expected!
+</details>
 
 ### The Client 
 
